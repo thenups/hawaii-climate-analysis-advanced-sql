@@ -47,8 +47,8 @@ def welcome():
         f'/api/v1.0/precipitation<br/>'
         f'/api/v1.0/stations<br/>'
         f'/api/v1.0/tobs<br/>'
-        f'/api/v1.0/startDate(YYYY-MM-DD)<br/>'
-        f'/api/v1.0/start(YYYY-MM-DD)/end(YYYY-MM-DD)<br/>'
+        f'/api/v1.0/YYYY-MM-DD #start date<br/>'
+        f'/api/v1.0/YYYY-MM-DD/YYYY-MM-DD #start/end dates<br/>'
     )
 
 
@@ -142,7 +142,7 @@ def tempSummaryStart(start):
 
     for result in results:
             dateDict = {}
-            dateDict['date'] = result[0]
+            dateDict['date'] = str(result[0])
             dateDict['tAvg'] = result[1]
             dateDict['tMin'] = result[2]
             dateDict['tMax'] = result[3]
@@ -175,7 +175,7 @@ def tempSummaryStartEnd(start,end):
 
     for result in results:
             dateDict = {}
-            dateDict['date'] = result[0]
+            dateDict['date'] = str(result[0])
             dateDict['tAvg'] = result[1]
             dateDict['tMin'] = result[2]
             dateDict['tMax'] = result[3]
