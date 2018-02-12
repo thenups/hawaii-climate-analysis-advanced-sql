@@ -48,8 +48,8 @@ def welcome():
         f'/api/v1.0/precipitation<br/>'
         f'/api/v1.0/stations<br/>'
         f'/api/v1.0/tobs<br/>'
-        f'/api/v1.0/<start><br/>'
-        f'/api/v1.0/start/end<br/>'
+        f'/api/v1.0/startDate(YYYY-MM-DD)<br/>'
+        f'/api/v1.0/start(YYYY-MM-DD)/end(YYYY-MM-DD)<br/>'
     )
 
 
@@ -118,16 +118,11 @@ def tobs():
     # Return the json representation of your dictionary
     return jsonify(l)
 
-@app.route('/api/v1.0/start/<start>')
-def tempSummary(start,end):
 
-    s = datetime.strptime(start,'%Y-%m-%d')
+@app.route('/api/v1.0/<string:start>')
+def tempSummaryStart(start):
 
-    try:
-        e = datetime.strptime(end,'%Y-%m-%d')
-        endDate = True
-    except NameError:
-        pass
+    sdt = datetime.strptime(start,'%Y-%m-%d')
 
     # Select data
     sel = [
@@ -137,16 +132,10 @@ def tempSummary(start,end):
             func.max(Measurement.tobs)
           ]
 
-    if endDate == True:
-        results = session.query(*sel).\
-            filter(Measurement.date >= s, Measurement.date <= e).\
-            group_by(Measurement.date).\
-            order_by(Measurement.date).all()
-    else:
-        results = session.query(*sel).\
-            filter(Measurement.date >= s).\
-            group_by(Measurement.date).\
-            order_by(Measurement.date).all()
+    results = session.query(*sel).\
+        filter(Measurement.date >= sdt).\
+        group_by(Measurement.date).\
+        order_by(Measurement.date).all()
 
     # Create a dictionary from the row data and append to a list of allDates
     dictList = []
@@ -159,6 +148,40 @@ def tempSummary(start,end):
             dateDict['tMax'] = result[3]
             dictList.append(dateDict)
 
+    # Return the json representation of your dictionary
+    return jsonify(dictList)
+
+@app.route('/api/v1.0/<string:start2>/<string:end>')
+def tempSummaryStartEnd(start,end):
+
+    sdt = datetime.strptime(start2,'%Y-%m-%d')
+    edt = datetime.strptime(end,'%Y-%m-%d')
+
+    # Select data
+    sel = [
+            Measurement.date,
+            func.avg(Measurement.tobs),
+            func.min(Measurement.tobs),
+            func.max(Measurement.tobs)
+          ]
+
+    results = session.query(*sel).\
+        filter(Measurement.date >= sdt, Measurement.date <= edt).\
+        group_by(Measurement.date).\
+        order_by(Measurement.date).all()
+
+    # Create a dictionary from the row data and append to a list of allDates
+    dictList = []
+
+    for result in results:
+            dateDict = {}
+            dateDict['date'] = result[0]
+            dateDict['tAvg'] = result[1]
+            dateDict['tMin'] = result[2]
+            dateDict['tMax'] = result[3]
+            dictList.append(dateDict)
+
+    #  Return the json representation of your dictionary
     return jsonify(dictList)
 
 if __name__ == '__main__':
