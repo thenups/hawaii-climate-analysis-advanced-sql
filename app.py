@@ -2,8 +2,7 @@
 import datetime as dt
 import numpy as np
 import pandas as pd
-import datetime as dt
-from datetime import datetime
+from datetime import datetime, date
 
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
@@ -65,7 +64,7 @@ def precipitation():
 
     for date in results:
         dateDict = {}
-        dateDict[date.date] = date.prcp
+        dateDict[str(date.date)] = date.prcp
         allDates.append(dateDict)
 
     # Return the json representation of your dictionary
@@ -90,11 +89,11 @@ def tobs():
     """Return a json list of Temperature Observations (tobs) for the previous year"""
     # Query for the dates and temperature observations from the last year
     # Latest Date in data
-    lastDate = session.query(Measurement.date).order_by(Measurement.date.desc()).first()
-    lastDateTime = datetime.strptime(lastDate[0],'%Y-%m-%d')
+    lastDate = session.query(Measurement.date).\
+        order_by(Measurement.date.desc()).first()
 
     # Calculate the date 1 year ago
-    oneYearAgoDate = datetime.date(lastDateTime) - dt.timedelta(days=365)
+    yearAgo = date((lastDate.date).year - 1, (lastDate.date).month, (lastDate.date).day)
 
     # Select tobs data
     sel = [
@@ -104,7 +103,7 @@ def tobs():
 
     # Query data from database and filter for last year
     results = session.query(*sel).\
-        filter(Measurement.date < lastDateTime, Measurement.date > oneYearAgoDate).\
+        filter(Measurement.date <= lastDate.date, Measurement.date > yearAgo).\
         order_by(Measurement.date).all()
 
     # Create a dictionary from the row data and append to a list of allDates
@@ -112,17 +111,18 @@ def tobs():
 
     for result in results:
             dateDict = {}
-            dateDict[result[0]] = result[1]
-            allDates.append(dictList)
+            dateDict[str(result[0])] = result[1]
+            dictList.append(dateDict)
 
     # Return the json representation of your dictionary
-    return jsonify(l)
+    return jsonify(dictList)
 
 
 @app.route('/api/v1.0/<string:start>')
 def tempSummaryStart(start):
 
-    sdt = datetime.strptime(start,'%Y-%m-%d')
+    sdt = datetime.strptime(start,'%Y-%m-%d').date()
+    print(sdt)
 
     # Select data
     sel = [
@@ -151,11 +151,11 @@ def tempSummaryStart(start):
     # Return the json representation of your dictionary
     return jsonify(dictList)
 
-@app.route('/api/v1.0/<string:start2>/<string:end>')
+@app.route('/api/v1.0/<string:start>/<string:end>')
 def tempSummaryStartEnd(start,end):
 
-    sdt = datetime.strptime(start2,'%Y-%m-%d')
-    edt = datetime.strptime(end,'%Y-%m-%d')
+    sdt = datetime.strptime(start,'%Y-%m-%d').date()
+    edt = datetime.strptime(end,'%Y-%m-%d').date()
 
     # Select data
     sel = [
